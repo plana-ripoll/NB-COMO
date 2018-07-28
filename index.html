@@ -122,42 +122,123 @@ $(document).ready(function () {
 </div>
 
 
-<p>This document is an accompanying file of the paper</p>
-Plana-Ripoll <em>et al.</em> <strong>The pervasive nature of comorbidity within mental disorders: a comprehensive, nationwide cohort study.</strong> <em>Journal name</em>, 201x; xx(xx): xx-xx. <details> <summary> Full list of authors </summary>
+<p>This document is an accompanying file of the paper:</p>
+Plana-Ripoll <em>et al.</em> <strong>The pervasive nature of comorbidity within mental disorders: a comprehensive, nationwide cohort study.</strong> <em>Journal</em>, 201x; xx(xx): xx-xx. Link to the published paper <a href="http://www.nbepi.com/NB-COMO">here</a> <details> <summary> Full list of authors </summary>
 <p>
-Oleguer Plana-Ripoll, XXXXX (to be updated)
+Oleguer Plana-Ripoll, Carsten Bøcker Pedersen, Yan Holtz, Michael Benros, Søren Dalsgaard, Peter De Jonge, Chun Chieh Fan, Louisa Degenhardt, Andrea Ganna, Aja Neergaard Greve, Jane Gunn, Kim Moesgaard Iburg, Lars Vedel Kessing, Brian K. Lee, Carmen C.W. Lim, Ole Mors, Merete Nordentoft, Anders Prior, Annelieke M. Roest, Sukanta Saha, Andrew Schork, James G. Scott, Kate M. Scott, Terry Stedman, Holger J. Sørensen, Thomas Werge, Harvey A. Whiteford, Thomas Munk Laursen, Esben Agerbo, Ron C. Kessler, Preben Bo Mortensen and John J. McGrath
 </p>
-<p></details></p>
-<p>This paper estimates the association between 90 pairs of mental disorders. In this document, the R code for one specific pair is provided: the association between Mood Disorders (as a prior-disorder) and Neurotic Disorders (as a later-disorder).</p>
+<p></details> Link to the interactive website with all results available <a href="http://www.nbepi.com/NB-COMO">here</a> - Comments on the code <a href="mailto:%20opr@econ.au.dk">here</a>.</p>
+<p>In this paper, we estimated the association between 90 pairs of mental disorders. In this document, the R code for one specific pair is provided: the association between Mood Disorders (as a prior-disorder) and Neurotic Disorders (as a later-disorder). Follow the steps 1-7 below in order to replicate the analyses.</p>
 <div id="section" class="section level1 tabset">
 <h1></h1>
-<div id="load-libraries-and-data" class="section level2">
-<h2>Load libraries and data</h2>
+<div id="libraries-and-data" class="section level2">
+<h2>1. Libraries and data</h2>
 <div id="load-necessary-libraries" class="section level3">
 <h3>Load necessary libraries</h3>
 <pre class="r"><code>library(lubridate)
-library(survival)</code></pre>
-<p>// <code>{r, include=FALSE} // load(&quot;../disease_D41.RData&quot;) // correct &lt;- data_survival_noties[, c(&quot;pnr&quot;, &quot;D00A&quot;, &quot;D10A&quot;, &quot;D20A&quot;, &quot;D30A&quot;, &quot;D51A&quot;, &quot;D61A&quot;, &quot;D70A&quot;, &quot;D81A&quot;, &quot;D91A&quot;)] // rm(data_disease, data_survival_noties) // correct &lt;- correct[!duplicated(correct), ] //</code></p>
+library(survival)
+library(knitr)
+library(multcomp)
+library(gdata)
+library(data.table)
+library(mstate)
+library(plyr)</code></pre>
 </div>
 <div id="load-necessary-data" class="section level3">
 <h3>Load necessary data</h3>
-<pre class="r"><code>load(&quot;../basics_REMOVE.RData&quot;)</code></pre>
+<pre class="r"><code>load(&quot;../basics.RData&quot;)</code></pre>
 <p>There are two necessary datasets for the estimations: <strong>data_disease</strong> and <strong>land</strong>.</p>
-<pre class="r"><code>data_disease &lt;- stam_diag[, c(&quot;pnr&quot;, &quot;fdato&quot;, &quot;fdatoD&quot;, &quot;Byear&quot;, &quot;kqn&quot;, &quot;stat&quot;, &quot;statd&quot;, &quot;statdD&quot;, &quot;statdA&quot;,
-                           &quot;D00&quot;, &quot;D10&quot;, &quot;D20&quot;, &quot;D30&quot;, &quot;D41&quot;, &quot;D51&quot;, &quot;D61&quot;, &quot;D70&quot;, &quot;D81&quot;, &quot;D91&quot;)]
+<div id="dataset-data_disease" class="section level4">
+<h4>dataset <strong>data_disease</strong></h4>
+<pre class="r"><code>data_disease &lt;- stam_diag[, c(&quot;pnr&quot;, &quot;fdato&quot;, &quot;fdatoD&quot;, &quot;Byear&quot;, &quot;kqn&quot;, &quot;stat&quot;, &quot;statd&quot;, &quot;statdD&quot;, &quot;statdA&quot;, &quot;D00&quot;, &quot;D10&quot;, &quot;D20&quot;, &quot;D30&quot;, &quot;D41&quot;, &quot;D51&quot;, &quot;D61&quot;, &quot;D70&quot;, &quot;D81&quot;, &quot;D91&quot;)]
 nrow(data_disease)</code></pre>
-<pre><code>## [1] 77037</code></pre>
-<p>Dataset <strong>data_disease</strong> contains information on 77037 Danish residents. EXPLAIN ABOUT STAMDATA</p>
-<pre class="r"><code>nrow(land)</code></pre>
-<pre><code>## [1] 84616</code></pre>
-<p>Dataset <strong>land</strong> contains information on 77037 Danish residents. EXPLAIN ABOUT STAMDATA</p>
+<pre><code>## [1] 7387479</code></pre>
+<p>The Danish Civil Registration System was established on April 1, 1968, where all persons alive and living in Denmark were registered. After this date, all persons born or immigrating to Denmark were included. Dataset <strong>data_disease</strong> contains information on the subsample of this group who were born in Denmark between January 1, 1900 and December 31, 2015 (N=7387479). Information includes a unique personal identification number used to link information from several registers (<strong>pnr</strong>), birthdate (<strong>fdato</strong>), sex (<strong>kqn</strong>: “M” for males and “K” for females), legal status (<strong>stat</strong>: 1 for active citizens, 70 for disappeared, 80 for emigrated and 90 for dead) and date of disappearance, emigration or death (<strong>statd</strong>). In addition, information on the 10 mental disorders used in this publication were included from the Danish Psychiatric Central Research Register: Organic Disorders (<strong>D00</strong>), Substance Use disorders (<strong>D10</strong>), Schizophrenia and related disorders (<strong>D20</strong>), Mood Disorders (<strong>D30</strong>), Neurotic Disorders (<strong>D41</strong>), Eating Disorders (<strong>D51</strong>), Personality Disorders (<strong>D61</strong>), Intelectual disabilities (<strong>D70</strong>), Developmental Disorders (<strong>D81</strong>) and Behavioral Disorders (<strong>D91</strong>).</p>
+<p><strong>According to Danish regulations, it is not allowed to share personal data, so an invented case is used here to show the data structure.</strong> This invented person will be used throughout the whole code example. She was born on May 31, 1985 and emigrated from Denmark on March 13, 2015. She received a diagnosis of Substance Use disorders for the first time on October 15, 2005; Mood Disorders on December 1, 2010; Neurotic Disorders on November 10, 2014; and Eating Disorders on April 13, 2011.</p>
+<table>
+<caption>data_disease: This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="left">fdato</th>
+<th align="right">fdatoD</th>
+<th align="right">Byear</th>
+<th align="left">kqn</th>
+<th align="right">stat</th>
+<th align="left">statd</th>
+<th align="right">statdD</th>
+<th align="right">statdA</th>
+<th align="left">D00</th>
+<th align="left">D10</th>
+<th align="left">D20</th>
+<th align="left">D30</th>
+<th align="left">D41</th>
+<th align="left">D51</th>
+<th align="left">D61</th>
+<th align="left">D70</th>
+<th align="left">D81</th>
+<th align="left">D91</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="left">1985-05-31</td>
+<td align="right">1985.411</td>
+<td align="right">1985</td>
+<td align="left">K</td>
+<td align="right">80</td>
+<td align="left">2015-03-13</td>
+<td align="right">2015.195</td>
+<td align="right">29.784</td>
+<td align="left">NA</td>
+<td align="left">2005-10-15</td>
+<td align="left">NA</td>
+<td align="left">2010-12-01</td>
+<td align="left">2014-11-10</td>
+<td align="left">2011-04-13</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="dataset-land" class="section level4">
+<h4>dataset <strong>land</strong></h4>
+<p>Dataset <strong>land</strong> contains information on all persons in <strong>data_disease</strong> regarding periods of living in Denmark. Each period of Danish residence is defined with a starting date (<strong>tflytd</strong>) and ending date (<strong>fflytd)</strong></p>
+<p>Invented data for the same invented person above is used to show the data structure. This person was living in Denmark since birth (May 31, 1985) until emigration (March 13, 2015) except for a period that she moved abroad (from August 1, 1997 to January 5, 1998).</p>
+<table>
+<caption>land_disease: This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="left">tflytd</th>
+<th align="left">fflytd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="left">1985-05-31</td>
+<td align="left">1997-08-01</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="left">1998-01-05</td>
+<td align="left">2015-03-13</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
-<div id="set-population-follow-up-time-prior--and-later-disorders." class="section level2">
-<h2>Set population, follow-up time, prior- and later-disorders.</h2>
-<p>With these two datasets, we can create the final dataset for analysis.</p>
-<div id="set-outcome-of-interest" class="section level4">
-<h4>Set outcome of interest</h4>
+</div>
+<div id="population-follow-up-time-prior--and-later-disorders." class="section level2">
+<h2>2. Population, follow-up time, prior- and later-disorders.</h2>
+<p>With these two datasets, we can set the study population, the specific follow-up time for each person, and information on the later-disorder (Neurotic Disorders) and all prior-disorders (all disorders except Neurotic Disorders).</p>
+<div id="set-outcome-of-interest-later-disorder" class="section level4">
+<h4>Set outcome of interest (later-disorder)</h4>
 <p>The outcome of interest for this code example is Neurotic Disorders (variable <strong>D41</strong>). The possible minimum age of onset for this disorder is 5 years.</p>
 <pre class="r"><code>disease &lt;- &quot;D41&quot;
 minage &lt;- 5</code></pre>
@@ -178,20 +259,85 @@ data_disease$exitA &lt;- data_disease$exitD - data_disease$fdatoD</code></pre>
 </div>
 <div id="eliminate-those-with-negative-follow-up-time" class="section level4">
 <h4>Eliminate those with “negative” follow-up time</h4>
-<p>Some persons died or emigrated before the follow-up starts on January 1, 2000 (or age 5 years). These persons need to be excluded from the sample. An easy way to identify them is because their follow-up time finishes before it starts.</p>
+<p>Some persons died or emigrated before the follow-up started on January 1, 2000 (or age 5 years). These persons need to be excluded from the sample. An easy way to identify them is because their follow-up time finishes before it starts, so we keep in the sample only those whose follow-up starts before it finishes.</p>
 <pre class="r"><code>data_disease &lt;- data_disease[data_disease$entryA &lt; data_disease$exitA, ]</code></pre>
 </div>
 <div id="include-only-those-living-in-denmark-at-beginning-of-follow-up" class="section level4">
 <h4>Include only those living in Denmark at beginning of follow-up</h4>
-<p>Some persons were living outside Denmark on the date of start of follow-up (variable <strong>entry</strong>). We need to keep only those residing in the country on that date.</p>
+<p>Some persons were living outside Denmark on the date of start of follow-up (variable <strong>entry</strong>). We need to keep only those residing in the country on that date. We use information from the dataset <strong>land</strong> to obtain this information.</p>
 <pre class="r"><code>data_disease_DK &lt;- merge(data_disease, land, all.x = TRUE, all.y = FALSE)
 data_disease_DK &lt;- data_disease_DK[(!is.na(data_disease_DK$tflytd)) &amp;
                                      (data_disease_DK$tflytd &lt;= data_disease_DK$entry) &amp;
                                      (data_disease_DK$fflytd &gt; data_disease_DK$entry) 
                                    , ]
 nrow(data_disease_DK)</code></pre>
-<pre><code>## [1] 77037</code></pre>
-<p>The sample now consists on 77037 persons who were living in Denmark on the date of start of follow-up (January 1, 2000 or the date they turned 5 years, if it happened afterwards).</p>
+<pre><code>## [1] 5699944</code></pre>
+<p>The sample now consists on 5699944 persons who were living in Denmark on the date of start of follow-up (January 1, 2000 or the date they turned 5 years, if it happened afterwards).</p>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="left">fdato</th>
+<th align="right">fdatoD</th>
+<th align="right">Byear</th>
+<th align="left">kqn</th>
+<th align="right">stat</th>
+<th align="left">statd</th>
+<th align="right">statdD</th>
+<th align="right">statdA</th>
+<th align="left">D00</th>
+<th align="left">D10</th>
+<th align="left">D20</th>
+<th align="left">D30</th>
+<th align="left">D41</th>
+<th align="left">D51</th>
+<th align="left">D61</th>
+<th align="left">D70</th>
+<th align="left">D81</th>
+<th align="left">D91</th>
+<th align="right">entryA</th>
+<th align="right">entryD</th>
+<th align="left">entry</th>
+<th align="left">exit</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="left">tflytd</th>
+<th align="left">fflytd</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="left">1985-05-31</td>
+<td align="right">1985.411</td>
+<td align="right">1985</td>
+<td align="left">K</td>
+<td align="right">80</td>
+<td align="left">2015-03-13</td>
+<td align="right">2015.195</td>
+<td align="right">29.784</td>
+<td align="left">NA</td>
+<td align="left">2005-10-15</td>
+<td align="left">NA</td>
+<td align="left">2010-12-01</td>
+<td align="left">2014-11-10</td>
+<td align="left">2011-04-13</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="right">14.589</td>
+<td align="right">2000</td>
+<td align="left">2000-01-01</td>
+<td align="left">2015-03-13</td>
+<td align="right">2015.195</td>
+<td align="right">29.78352</td>
+<td align="left">1998-01-05</td>
+<td align="left">2015-03-13</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="information-on-onset-of-later-disorder-neurotic-disorders" class="section level4">
 <h4>Information on onset of later-disorder (Neurotic Disorders)</h4>
@@ -202,20 +348,92 @@ data_disease_DK$onsetA &lt;- data_disease_DK$onsetD - data_disease_DK$fdatoD  </
 <pre class="r"><code>data_disease_DK$exit &lt;- pmin(data_disease_DK$exit, (data_disease_DK[, disease] + 1), na.rm = TRUE)
 data_disease_DK$exitD &lt;- decimal_date(data_disease_DK$exit)
 data_disease_DK$exitA &lt;- data_disease_DK$exitD - data_disease_DK$fdatoD </code></pre>
-<p>And a variable <strong>fail</strong> can be created indicating the type out outcome on end of follow-up (0 = censored; 1 = onset of neurotic disorders;70 = disappearance; 80 = emigration; 90 = death).</p>
+<p>Note that for someone developing Neurotic Disorders before the start of follow-up, now <strong>exit</strong> will occur before <strong>entry</strong>. These are the prevalent cases and will be identified later.</p>
+<p>A variable <strong>fail</strong> can be created indicating the type of outcome at end of follow-up (0 = censored; 1 = onset of neurotic disorders;70 = disappearance; 80 = emigration; 90 = death).</p>
 <pre class="r"><code>data_disease_DK$fail &lt;- (90 * (!is.na(data_disease_DK$statdA) &amp; (data_disease_DK$statdA == data_disease_DK$exitA) &amp; (data_disease_DK$stat == 90))) + 
   (80 * (!is.na(data_disease_DK$statdA) &amp; (data_disease_DK$statdA == data_disease_DK$exitA) &amp; (data_disease_DK$stat == 80))) +
   (70 * (!is.na(data_disease_DK$statdA) &amp; (data_disease_DK$statdA == data_disease_DK$exitA) &amp; (data_disease_DK$stat == 70))) +
   (01 * (!is.na(data_disease_DK$onsetA) &amp; (data_disease_DK$onsetA == data_disease_DK$exitA))) 
 table(data_disease_DK$fail)</code></pre>
 <pre><code>## 
-##     0     1    70    80    90 
-## 61837  2753    16   889 11542</code></pre>
-<p>Note that some persons can gave two outcomes on the same day (<em>e.g.</em> 91 = death and onset of Neurotic Disorders).</p>
+##       0       1      70      80      90      91 
+## 4497071  294575    1069   69417  837798      14</code></pre>
+<p>Note that some persons can have two outcomes on the same day (<em>e.g.</em> 91 = death and onset of Neurotic Disorders).</p>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="left">fdato</th>
+<th align="right">fdatoD</th>
+<th align="right">Byear</th>
+<th align="left">kqn</th>
+<th align="right">stat</th>
+<th align="left">statd</th>
+<th align="right">statdD</th>
+<th align="right">statdA</th>
+<th align="left">D00</th>
+<th align="left">D10</th>
+<th align="left">D20</th>
+<th align="left">D30</th>
+<th align="left">D41</th>
+<th align="left">D51</th>
+<th align="left">D61</th>
+<th align="left">D70</th>
+<th align="left">D81</th>
+<th align="left">D91</th>
+<th align="right">entryA</th>
+<th align="right">entryD</th>
+<th align="left">entry</th>
+<th align="left">exit</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="left">tflytd</th>
+<th align="left">fflytd</th>
+<th align="right">onsetD</th>
+<th align="right">onsetA</th>
+<th align="right">fail</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="left">1985-05-31</td>
+<td align="right">1985.411</td>
+<td align="right">1985</td>
+<td align="left">K</td>
+<td align="right">80</td>
+<td align="left">2015-03-13</td>
+<td align="right">2015.195</td>
+<td align="right">29.784</td>
+<td align="left">NA</td>
+<td align="left">2005-10-15</td>
+<td align="left">NA</td>
+<td align="left">2010-12-01</td>
+<td align="left">2014-11-10</td>
+<td align="left">2011-04-13</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="left">NA</td>
+<td align="right">14.589</td>
+<td align="right">2000</td>
+<td align="left">2000-01-01</td>
+<td align="left">2014-11-11</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="left">1998-01-05</td>
+<td align="left">2015-03-13</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="information-on-onset-of-prior-disorders" class="section level4">
 <h4>Information on onset of prior-disorders</h4>
-<p>The later-disorder of interest is Neurotic Disorders (variable <strong>D41</strong>). The one nine disorders (variables <strong>D00</strong>, <strong>D10</strong>, <strong>D20</strong>, <strong>D30</strong>, <strong>D51</strong>, <strong>D61</strong>, <strong>D70</strong>, <strong>D81</strong>, <strong>D91</strong>) will be treated as prior-disorders. For example, variable <strong>D30D</strong> contains the date of onset of Mood Disorders, and variable <strong>D30A</strong> contains the age at onset.</p>
+<p>The later-disorder of interest is Neurotic Disorders (variable <strong>D41</strong>). The other nine disorders (variables <strong>D00</strong>, <strong>D10</strong>, <strong>D20</strong>, <strong>D30</strong>, <strong>D51</strong>, <strong>D61</strong>, <strong>D70</strong>, <strong>D81</strong>, <strong>D91</strong>) will be treated as prior-disorders. For example, variable <strong>D30D</strong> contains the date of onset of Mood Disorders, and variable <strong>D30A</strong> contains the age of onset.</p>
 <pre class="r"><code>comorbidities &lt;- c(&quot;D00&quot;, &quot;D10&quot;, &quot;D20&quot;, &quot;D30&quot;, &quot;D51&quot;, &quot;D61&quot;, &quot;D70&quot;, &quot;D81&quot;, &quot;D91&quot;)
 comorbiditiesD &lt;- paste(comorbidities,&quot;D&quot;,sep=&quot;&quot;)
 comorbiditiesA &lt;- paste(comorbidities,&quot;A&quot;,sep=&quot;&quot;)
@@ -231,18 +449,1976 @@ at_risk &lt;- data_disease_DK[data_disease_DK$entryA &lt; data_disease_DK$exitA,
                            c(&quot;pnr&quot;, &quot;fdatoD&quot;, &quot;entry&quot;, &quot;entryD&quot;, &quot;entryA&quot;, &quot;exitD&quot;, &quot;exitA&quot;, &quot;fail&quot;, &quot;statdA&quot;, &quot;kqn&quot;, &quot;Byear&quot;, comorbiditiesA)]
 
 nrow(prevalent); nrow(at_risk)</code></pre>
-<pre><code>## [1] 0</code></pre>
-<pre><code>## [1] 77037</code></pre>
+<pre><code>## [1] 89348</code></pre>
+<pre><code>## [1] 5610596</code></pre>
+<p>From the total of 5699944 persons who were living in Denmark on the date of start of follow-up, 89348 had a previous diagnosis of Neurotic Disorders, and were excluded from the analysis as prevalent cases. The remaining 5610596 did not have a previous diagnosis of Neurotic Disorders and were at risk of becoming an incident case during the follow-up, and thus included in the analysis (this information is included in Table 1 in the publication).</p>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">fdatoD</th>
+<th align="left">entry</th>
+<th align="right">entryD</th>
+<th align="right">entryA</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="right">fail</th>
+<th align="right">statdA</th>
+<th align="left">kqn</th>
+<th align="right">Byear</th>
+<th align="right">D00A</th>
+<th align="right">D10A</th>
+<th align="right">D20A</th>
+<th align="right">D30A</th>
+<th align="right">D51A</th>
+<th align="right">D61A</th>
+<th align="right">D70A</th>
+<th align="right">D81A</th>
+<th align="right">D91A</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
 </div>
 </div>
-<div id="correct-ties" class="section level2">
-<h2>Correct ties</h2>
+<div id="break-ties" class="section level2">
+<h2>3. Break ties</h2>
+<p>For some persons, the prior-disorder and later-disorder occurred on the same day (ties). In a time-to-event setting, individuals are followed until the outcome (later-disorder), and these persons would not be considered to be exposed to the prior-disorder. This would underestimate all associations, given that concurrant pairs of disorders could never occur. To fix it, we broke some of these ties, as explained below.</p>
+<pre class="r"><code>exposures &lt;- comorbidities
+exposures</code></pre>
+<pre><code>## [1] &quot;D00&quot; &quot;D10&quot; &quot;D20&quot; &quot;D30&quot; &quot;D51&quot; &quot;D61&quot; &quot;D70&quot; &quot;D81&quot; &quot;D91&quot;</code></pre>
+<p>This is the list of variables containing the nine possible prior-disorders.</p>
+<pre class="r"><code>temp &lt;- at_risk
+temp$outcome &lt;- (temp$fail %in% c(1,71,81,91))*1
+table(temp$outcome)</code></pre>
+<pre><code>## 
+##       0       1 
+## 5405355  205241</code></pre>
+<p>In total, there are 205241 who develop the later-disorder during the follow-up (this information is included in Table 1 of the publication). These are the persons that we need to observe to identify ties (a prior-disorder with onset on the same day). We will do it for each of the nine prior-disorders:</p>
+<pre class="r"><code>for(i in 1:length(exposures)) {
+  # First we identify those with both the prior- and later-disorder
+  both_dx &lt;- temp[!is.na(temp[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]) &amp; temp$outcome==1, c(&quot;pnr&quot;, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;), &quot;exitA&quot;)]  
+  both_dx$diff &lt;- both_dx[, &quot;exitA&quot;] - both_dx[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]
+  
+  # Only if the two disorders happen within 5 years
+  both_dx &lt;- both_dx[abs(both_dx$diff)&lt;5, ]
+  
+  # How many the prior-disorder occurs before or after the later-disorder
+  before &lt;- dim(both_dx[both_dx$diff&gt;0, ])[1]
+  after &lt;- dim(both_dx[both_dx$diff&lt;0, ])[1]
+  
+  # prop_before is the proportion of persons who develop first the prior-disorder among those who 
+  # develop the two disorders within 5 years (but not on the same day)
+  prop_before &lt;- before/(before+after)
+  if(before==0) {
+    prop_before &lt;- 0
+  }
+  
+  # This proportion is used as a probability to break ties. Each tie will be broken with probability
+  # prop_before by moving the prior-disorder to one day earlier, following a random uniform distribution.
+  temp$random &lt;- runif(n=dim(temp)[1])
+  temp[temp$random &lt;= prop_before &amp; !is.na(temp[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]) &amp; temp$outcome==1 &amp; temp[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]==temp$exitA, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)] &lt;-
+    temp[temp$random &lt;= prop_before &amp; !is.na(temp[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]) &amp; temp$outcome==1 &amp; temp[, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)]==temp$exitA, paste(exposures[i],&quot;A&quot;,sep=&quot;&quot;)] - (1/365.25)          
+  
+  temp &lt;- temp[, names(temp) != &quot;random&quot;]
+}</code></pre>
+<p>Data for the invented person do not change compared to previous step, because there are no ties.</p>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">fdatoD</th>
+<th align="left">entry</th>
+<th align="right">entryD</th>
+<th align="right">entryA</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="right">fail</th>
+<th align="right">statdA</th>
+<th align="left">kqn</th>
+<th align="right">Byear</th>
+<th align="right">D00A</th>
+<th align="right">D10A</th>
+<th align="right">D20A</th>
+<th align="right">D30A</th>
+<th align="right">D51A</th>
+<th align="right">D61A</th>
+<th align="right">D70A</th>
+<th align="right">D81A</th>
+<th align="right">D91A</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+</tr>
+</tbody>
+</table>
 </div>
 <div id="time-varying-variables" class="section level2">
-<h2>Time-varying variables</h2>
+<h2>4. Time-varying variables</h2>
+<div id="prepare-data-for-time-to-event-analysis" class="section level3">
+<h3>Prepare data for time-to-event analysis</h3>
+<p>We create new variables <strong>id</strong>, <strong>tstart</strong>, <strong>tstop</strong> and <strong>endpoint</strong> (equivalent to <strong>pnr</strong>, <strong>entryA</strong>, <strong>exitA</strong>, <strong>outcome</strong>), but that will change later.</p>
+<pre class="r"><code>temp &lt;- tmerge(temp, temp, id = pnr, tstart = entryA, tstop = exitA)
+temp &lt;- tmerge(temp, temp, id = pnr, endpoint = event(exitA, outcome))</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">fdatoD</th>
+<th align="left">entry</th>
+<th align="right">entryD</th>
+<th align="right">entryA</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="right">fail</th>
+<th align="right">statdA</th>
+<th align="left">kqn</th>
+<th align="right">Byear</th>
+<th align="right">D00A</th>
+<th align="right">D10A</th>
+<th align="right">D20A</th>
+<th align="right">D30A</th>
+<th align="right">D51A</th>
+<th align="right">D61A</th>
+<th align="right">D70A</th>
+<th align="right">D81A</th>
+<th align="right">D91A</th>
+<th align="right">outcome</th>
+<th align="left">id</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">14.589</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+</tr>
+</tbody>
+</table>
 </div>
-<div id="data-analysis" class="section level2">
-<h2>Data analysis</h2>
+<div id="split-follow-up-time" class="section level3">
+<h3>Split follow-up time</h3>
+<p>Each person with a diagnosis of Mood Disorders (D30) needs to be “unexposed” until the onset of the disorder, and “exposed” afterwards. In addition, we want to split the follow-up time further depending on time since exposure (6 months, 1, 2, 5, 10, 15, &gt;15 years). For each person, we need to specify in which dates the follow-up time is going to be splitted.</p>
+<div id="identify-at-what-ages-the-follow-up-time-should-be-splitted" class="section level4">
+<h4>Identify at what ages the follow-up time should be splitted</h4>
+<pre class="r"><code># First on date of onset of Mood Disorders
+db_exposures0 &lt;- temp[!is.na(temp[, &quot;D30A&quot;]), c(&quot;pnr&quot;, &quot;exitA&quot;, &quot;D30A&quot;)]
+db_exposures0 &lt;- db_exposures0[db_exposures0[, &quot;exitA&quot;] &gt;= db_exposures0[, &quot;D30A&quot;],]
+
+# And then 6 months, 1 year, 2 years, etc. later.
+db_exposures6m &lt;- db_exposures0
+db_exposures6m[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + (1/2)
+db_exposures6m &lt;- db_exposures6m[db_exposures6m[, &quot;exitA&quot;] &gt;= db_exposures6m[, &quot;D30A&quot;],]
+db_exposures1 &lt;- db_exposures0
+db_exposures1[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + 1
+db_exposures1 &lt;- db_exposures1[db_exposures1[, &quot;exitA&quot;] &gt;= db_exposures1[, &quot;D30A&quot;],]
+db_exposures2 &lt;- db_exposures0
+db_exposures2[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + 2
+db_exposures2 &lt;- db_exposures2[db_exposures2[, &quot;exitA&quot;] &gt;= db_exposures2[, &quot;D30A&quot;],]
+db_exposures5 &lt;- db_exposures0
+db_exposures5[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + 5
+db_exposures5 &lt;- db_exposures5[db_exposures5[, &quot;exitA&quot;] &gt;= db_exposures5[, &quot;D30A&quot;],]
+db_exposures10 &lt;- db_exposures0
+db_exposures10[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + 10
+db_exposures10 &lt;- db_exposures10[db_exposures10[, &quot;exitA&quot;] &gt;= db_exposures10[, &quot;D30A&quot;],]
+db_exposures15 &lt;- db_exposures0
+db_exposures15[, &quot;D30A&quot;] &lt;- db_exposures0[, &quot;D30A&quot;] + 15
+db_exposures15 &lt;- db_exposures15[db_exposures15[, &quot;exitA&quot;] &gt;= db_exposures15[, &quot;D30A&quot;],]
+
+# Finally we combine all these times
+db_exposures &lt;- rbind(db_exposures0, db_exposures6m, db_exposures1, db_exposures2, db_exposures5, db_exposures10, db_exposures15)
+db_exposures &lt;- db_exposures[!duplicated(db_exposures), ]
+names(db_exposures)[names(db_exposures)==&quot;D30A&quot;]&lt;-&quot;cut_points&quot;
+db_exposures &lt;- db_exposures[, c(&quot;pnr&quot;, &quot;cut_points&quot;)]</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">cut_points</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">26.00681</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">26.50681</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">27.50681</td>
+</tr>
+</tbody>
+</table>
+<p>The invented person developed Mood Disorders at age 25.5, that is when the first splitting takes place. Then it will be splitted again 6 months after and 1 and 2 years after. No more times will be needed, given that this specific person is followed until age 29.8.</p>
+</div>
+<div id="split-the-follow-up-at-those-ages" class="section level4">
+<h4>Split the follow-up at those ages</h4>
+<p>We create two new variables: <strong>expo_D30</strong> that is a binary variable saying whether the person has had a diagnosis of Mood Disorders, and <strong>expo_time_after_D30</strong> that counts also the time after the onset.</p>
+<pre class="r"><code>temp &lt;- tmerge(temp, db_exposures, id = pnr, expo_time_after_D30=cumtdc(cut_points))
+temp$expo_D30 &lt;- (temp$expo_time_after_D30 &gt;= 1)</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">fdatoD</th>
+<th align="left">entry</th>
+<th align="right">entryD</th>
+<th align="right">entryA</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="right">fail</th>
+<th align="right">statdA</th>
+<th align="left">kqn</th>
+<th align="right">Byear</th>
+<th align="right">D00A</th>
+<th align="right">D10A</th>
+<th align="right">D20A</th>
+<th align="right">D30A</th>
+<th align="right">D51A</th>
+<th align="right">D61A</th>
+<th align="right">D70A</th>
+<th align="right">D81A</th>
+<th align="right">D91A</th>
+<th align="right">outcome</th>
+<th align="left">id</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">endpoint</th>
+<th align="right">expo_time_after_D30</th>
+<th align="left">expo_D30</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">14.58900</td>
+<td align="right">25.50681</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="left">TRUE</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="left">TRUE</td>
+</tr>
+</tbody>
+</table>
+<p>Note that the invented person now has 5 different observations, where <strong>tstop</strong> of each observation finishes on <strong>tstart</strong> of the following one, and the two variables regarding exposure to Mood Disorders change in each observation.</p>
+</div>
+</div>
+<div id="split-follow-up-time-for-comorbidities" class="section level3">
+<h3>Split follow-up time for comorbidities</h3>
+<p>There is one prior-disorder (Mood Disorders) and one later-disorder (Neurotic Disorders). The remaining eight disorders are used to adjust the models for mental health comorbidity. It is therefore necessary to replicate the previous step with the other 8 disorders.</p>
+<pre class="r"><code>adjustment &lt;- exposures[exposures!=&quot;D30&quot;]
+adjustment </code></pre>
+<pre><code>## [1] &quot;D00&quot; &quot;D10&quot; &quot;D20&quot; &quot;D51&quot; &quot;D61&quot; &quot;D70&quot; &quot;D81&quot; &quot;D91&quot;</code></pre>
+<pre class="r"><code>for(i in 1:length(adjustment)) {
+  
+  db_exposures0 &lt;- temp[!is.na(temp[, paste(adjustment[i],&quot;A&quot;,sep=&quot;&quot;)]), c(&quot;pnr&quot;, &quot;exitA&quot;, &quot;D30A&quot;, paste(adjustment[i],&quot;A&quot;,sep=&quot;&quot;))]
+  
+  ## We do not want to adjust for mediators (only for confounders), so we ignore mental disorders with onset after the prior-disorder
+  db_exposures0 &lt;- db_exposures0[is.na(db_exposures0[, &quot;D30A&quot;]) |
+                                   (!is.na(db_exposures0[, &quot;D30A&quot;]) &amp; db_exposures0[, paste(adjustment[i],&quot;A&quot;,sep=&quot;&quot;)] &lt; db_exposures0[, &quot;D30A&quot;]),]
+  db_exposures0 &lt;- db_exposures0[db_exposures0[, &quot;exitA&quot;] &gt;= db_exposures0[, paste(adjustment[i],&quot;A&quot;,sep=&quot;&quot;)],]
+  db_exposures0 &lt;- db_exposures0[!duplicated(db_exposures0), ]
+  
+  names(db_exposures0)[names(db_exposures0)==paste(adjustment[i],&quot;A&quot;,sep=&quot;&quot;)]&lt;-&quot;cut_points&quot;
+  db_exposures0 &lt;- db_exposures0[, c(&quot;pnr&quot;, &quot;cut_points&quot;)]
+  temp &lt;- tmerge(temp, db_exposures0, id = pnr, exposure=tdc(cut_points))
+
+  colnames(temp)[colnames(temp) == &quot;exposure&quot;] &lt;- paste(&quot;adjust_D30_by_prev_&quot;, adjustment[i], sep=&quot;&quot;)
+}</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">fdatoD</th>
+<th align="left">entry</th>
+<th align="right">entryD</th>
+<th align="right">entryA</th>
+<th align="right">exitD</th>
+<th align="right">exitA</th>
+<th align="right">fail</th>
+<th align="right">statdA</th>
+<th align="left">kqn</th>
+<th align="right">Byear</th>
+<th align="right">D00A</th>
+<th align="right">D10A</th>
+<th align="right">D20A</th>
+<th align="right">D30A</th>
+<th align="right">D51A</th>
+<th align="right">D61A</th>
+<th align="right">D70A</th>
+<th align="right">D81A</th>
+<th align="right">D91A</th>
+<th align="right">outcome</th>
+<th align="left">id</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">endpoint</th>
+<th align="right">expo_time_after_D30</th>
+<th align="left">expo_D30</th>
+<th align="right">adjust_D30_by_prevD00</th>
+<th align="right">adjust_D30_by_prev_D10</th>
+<th align="right">adjust_D30_by_prevD20</th>
+<th align="right">adjust_D30_by_prevD51</th>
+<th align="right">adjust_D30_by_prevD61</th>
+<th align="right">adjust_D30_by_prevD70</th>
+<th align="right">adjust_D30_by_prevD81</th>
+<th align="right">adjust_D30_by_prevD91</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">14.58900</td>
+<td align="right">20.37804</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">20.37804</td>
+<td align="right">25.50681</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="left">FALSE</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="left">TRUE</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0</td>
+<td align="right">2</td>
+<td align="left">TRUE</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">0</td>
+<td align="right">3</td>
+<td align="left">TRUE</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">1985.411</td>
+<td align="left">2000-01-01</td>
+<td align="right">2000</td>
+<td align="right">14.589</td>
+<td align="right">2014.86</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">29.784</td>
+<td align="left">K</td>
+<td align="right">1985</td>
+<td align="right">NA</td>
+<td align="right">20.37804</td>
+<td align="right">NA</td>
+<td align="right">25.50681</td>
+<td align="right">25.87119</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">NA</td>
+<td align="right">1</td>
+<td align="left">invented_person</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="left">TRUE</td>
+<td align="right">0</td>
+<td align="right">1</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>Note that Substance Use disorders (<strong>D10</strong>) occurred before the prior-disorder, and it is considered as a time-varying variable. However, onset of Eating Disorders (<strong>D51</strong>) occurred after the onset of the prior-disorder, and it is not considered when adjusting for mental health comorbidity.</p>
+</div>
+<div id="save-the-data" class="section level3">
+<h3>Save the data</h3>
+<pre class="r"><code>data_survival &lt;- temp
+save(prevalent, at_risk, data_survival, data_invented, file=&quot;SHARED_disease_D41.RData&quot;)</code></pre>
+</div>
+</div>
+<div id="descriptive-analysis" class="section level2">
+<h2>5. Descriptive analysis</h2>
+<div id="load-the-data" class="section level3">
+<h3>Load the data</h3>
+<p>Load the datasets prepared in steps 1-4.</p>
+<pre class="r"><code>rm(list = ls())
+load(file=&quot;SHARED_disease_D41.RData&quot;)</code></pre>
+</div>
+<div id="descriptive-statistics-of-neurotic-disorders-as-later-disorder-table-1-of-the-publication" class="section level3">
+<h3>Descriptive statistics of Neurotic Disorders as later-disorder (Table 1 of the publication)</h3>
+<div id="prevalent-cases-before-start-of-follow-up---overall-and-by-sex" class="section level4">
+<h4>Prevalent cases before start of follow-up - overall and by sex</h4>
+<pre class="r"><code>nrow(prevalent); table(prevalent$kqn)</code></pre>
+<pre><code>## [1] 89348</code></pre>
+<pre><code>## 
+##     K     M 
+## 57910 31438</code></pre>
+</div>
+<div id="persons-at-risk-of-developing-neurotic-disorders-during-follow-up---overall-and-by-sex" class="section level4">
+<h4>Persons at risk of developing Neurotic Disorders during follow-up - overall and by sex</h4>
+<pre class="r"><code>nrow(at_risk); table(at_risk$kqn)</code></pre>
+<pre><code>## [1] 5610596</code></pre>
+<pre><code>## 
+##       K       M 
+## 2807442 2803154</code></pre>
+</div>
+<div id="new-cases-of-neurotic-disorders-during-follow-up---overall-and-by-sex" class="section level4">
+<h4>New cases of Neurotic Disorders during follow-up - overall and by sex</h4>
+<pre class="r"><code>nrow(data_survival[data_survival$endpoint==1, ]); table(data_survival[data_survival$endpoint==1, &quot;kqn&quot;])</code></pre>
+<pre><code>## [1] 205241</code></pre>
+<pre><code>## 
+##      K      M 
+## 120756  84485</code></pre>
+</div>
+</div>
+<div id="association-between-mood-disorders-prior-disorder-and-neurotic-disorders-later-disorder" class="section level3">
+<h3>Association between Mood Disorders (prior-disorder) and Neurotic Disorders (later-disorder)</h3>
+<div id="count-persons-person-years-and-number-of-cases-for-exposed-and-unexposed-to-mood-disorders" class="section level4">
+<h4>1. Count persons, person-years and number of cases for exposed and unexposed to Mood Disorders</h4>
+<pre class="r"><code># Some persons have more than one observation (due to splitting time), and they need to be counted only once
+number &lt;- data_survival[, c(&quot;pnr&quot;, &quot;kqn&quot;, &quot;expo_D30&quot;)]
+number &lt;- number[!duplicated(number), ]
+number$number &lt;- 1
+number_sex &lt;- aggregate(number ~ expo_D30 + kqn, data = number, FUN=sum, na.rm=TRUE)
+
+data_survival$time &lt;- data_survival$tstop - data_survival$tstart
+py_sex &lt;- aggregate(cbind(time, endpoint) ~ expo_D30 + kqn, data = data_survival, FUN=sum, na.rm=TRUE)
+
+number &lt;- merge(number_sex, py_sex)
+number2 &lt;- rbind(number, 
+                 cbind(aggregate(cbind(number, time, endpoint) ~ expo_D30, data = number, FUN=sum, na.rm=TRUE), kqn=&quot;all&quot;)
+) 
+
+# According to Danish regulations, we cannot report cells with less than 3 cases
+number2[number2$number&lt;3, &quot;number&quot;] &lt;- NA
+number2[number2$endpoint&lt;3, &quot;endpoint&quot;] &lt;- NA
+
+kable(number2) </code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">expo_D30</th>
+<th align="left">kqn</th>
+<th align="right">number</th>
+<th align="right">time</th>
+<th align="right">endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">FALSE</td>
+<td align="left">K</td>
+<td align="right">2773129</td>
+<td align="right">37728220.1</td>
+<td align="right">98555</td>
+</tr>
+<tr class="even">
+<td align="left">FALSE</td>
+<td align="left">M</td>
+<td align="right">2784330</td>
+<td align="right">38039730.0</td>
+<td align="right">71364</td>
+</tr>
+<tr class="odd">
+<td align="left">TRUE</td>
+<td align="left">K</td>
+<td align="right">102155</td>
+<td align="right">757457.0</td>
+<td align="right">22201</td>
+</tr>
+<tr class="even">
+<td align="left">TRUE</td>
+<td align="left">M</td>
+<td align="right">62826</td>
+<td align="right">445976.4</td>
+<td align="right">13121</td>
+</tr>
+<tr class="odd">
+<td align="left">FALSE</td>
+<td align="left">all</td>
+<td align="right">5557459</td>
+<td align="right">75767950.1</td>
+<td align="right">169919</td>
+</tr>
+<tr class="even">
+<td align="left">TRUE</td>
+<td align="left">all</td>
+<td align="right">164981</td>
+<td align="right">1203433.4</td>
+<td align="right">35322</td>
+</tr>
+</tbody>
+</table>
+<p>Note that a person could be counted twice (one among exposed and one among unexposed) if exposure to Mood Disorders occurs during the follow-up time.</p>
+</div>
+<div id="count-persons-person-years-and-number-of-cases-for-exposed-and-unexposed-to-mood-disorders-considering-time-since-exposure" class="section level4">
+<h4>2. Count persons, person-years and number of cases for exposed and unexposed to Mood Disorders (considering time since exposure)</h4>
+<pre class="r"><code>number &lt;- data_survival[, c(&quot;pnr&quot;, &quot;kqn&quot;, &quot;expo_time_after_D30&quot;)]
+number &lt;- number[!duplicated(number), ]
+number$number &lt;- 1
+number_sex &lt;- aggregate(number ~ expo_time_after_D30 + kqn, data = number, FUN=sum, na.rm=TRUE)
+
+data_survival$time &lt;- data_survival$tstop - data_survival$tstart
+py_sex &lt;- aggregate(cbind(time, endpoint) ~ expo_time_after_D30 + kqn, data = data_survival, FUN=sum, na.rm=TRUE)
+
+number &lt;- merge(number_sex, py_sex)
+number2 &lt;- rbind(number, 
+                 cbind(aggregate(cbind(number, time, endpoint) ~ expo_time_after_D30, data = number, FUN=sum, na.rm=TRUE), kqn=&quot;all&quot;)
+) 
+# According to Danish regulations, we cannot report cells with less than 3 cases
+number2[number2$number&lt;3, &quot;number&quot;] &lt;- NA
+number2[number2$endpoint&lt;3, &quot;endpoint&quot;] &lt;- NA
+
+kable(number2)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="right">expo_time_after_D30</th>
+<th align="left">kqn</th>
+<th align="right">number</th>
+<th align="right">time</th>
+<th align="right">endpoint</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="right">0</td>
+<td align="left">K</td>
+<td align="right">2773129</td>
+<td align="right">37728220.07</td>
+<td align="right">98555</td>
+</tr>
+<tr class="even">
+<td align="right">0</td>
+<td align="left">M</td>
+<td align="right">2784330</td>
+<td align="right">38039730.02</td>
+<td align="right">71364</td>
+</tr>
+<tr class="odd">
+<td align="right">1</td>
+<td align="left">K</td>
+<td align="right">69228</td>
+<td align="right">29427.65</td>
+<td align="right">9559</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="left">M</td>
+<td align="right">44894</td>
+<td align="right">18950.67</td>
+<td align="right">6164</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="left">K</td>
+<td align="right">58431</td>
+<td align="right">27836.62</td>
+<td align="right">1500</td>
+</tr>
+<tr class="even">
+<td align="right">2</td>
+<td align="left">M</td>
+<td align="right">37537</td>
+<td align="right">17880.54</td>
+<td align="right">802</td>
+</tr>
+<tr class="odd">
+<td align="right">3</td>
+<td align="left">K</td>
+<td align="right">57103</td>
+<td align="right">52463.44</td>
+<td align="right">1987</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="left">M</td>
+<td align="right">36528</td>
+<td align="right">33614.52</td>
+<td align="right">1092</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="left">K</td>
+<td align="right">56917</td>
+<td align="right">136880.70</td>
+<td align="right">3256</td>
+</tr>
+<tr class="even">
+<td align="right">4</td>
+<td align="left">M</td>
+<td align="right">35956</td>
+<td align="right">86405.72</td>
+<td align="right">1932</td>
+</tr>
+<tr class="odd">
+<td align="right">5</td>
+<td align="left">K</td>
+<td align="right">45298</td>
+<td align="right">164371.80</td>
+<td align="right">2758</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="left">M</td>
+<td align="right">27864</td>
+<td align="right">100406.19</td>
+<td align="right">1530</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="left">K</td>
+<td align="right">28634</td>
+<td align="right">98242.20</td>
+<td align="right">1267</td>
+</tr>
+<tr class="even">
+<td align="right">6</td>
+<td align="left">M</td>
+<td align="right">17236</td>
+<td align="right">59286.81</td>
+<td align="right">679</td>
+</tr>
+<tr class="odd">
+<td align="right">7</td>
+<td align="left">K</td>
+<td align="right">29946</td>
+<td align="right">248234.57</td>
+<td align="right">1874</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="left">M</td>
+<td align="right">16475</td>
+<td align="right">129431.98</td>
+<td align="right">922</td>
+</tr>
+<tr class="odd">
+<td align="right">0</td>
+<td align="left">all</td>
+<td align="right">5557459</td>
+<td align="right">75767950.10</td>
+<td align="right">169919</td>
+</tr>
+<tr class="even">
+<td align="right">1</td>
+<td align="left">all</td>
+<td align="right">114122</td>
+<td align="right">48378.32</td>
+<td align="right">15723</td>
+</tr>
+<tr class="odd">
+<td align="right">2</td>
+<td align="left">all</td>
+<td align="right">95968</td>
+<td align="right">45717.16</td>
+<td align="right">2302</td>
+</tr>
+<tr class="even">
+<td align="right">3</td>
+<td align="left">all</td>
+<td align="right">93631</td>
+<td align="right">86077.97</td>
+<td align="right">3079</td>
+</tr>
+<tr class="odd">
+<td align="right">4</td>
+<td align="left">all</td>
+<td align="right">92873</td>
+<td align="right">223286.42</td>
+<td align="right">5188</td>
+</tr>
+<tr class="even">
+<td align="right">5</td>
+<td align="left">all</td>
+<td align="right">73162</td>
+<td align="right">264777.99</td>
+<td align="right">4288</td>
+</tr>
+<tr class="odd">
+<td align="right">6</td>
+<td align="left">all</td>
+<td align="right">45870</td>
+<td align="right">157529.01</td>
+<td align="right">1946</td>
+</tr>
+<tr class="even">
+<td align="right">7</td>
+<td align="left">all</td>
+<td align="right">46421</td>
+<td align="right">377666.55</td>
+<td align="right">2796</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+<div id="hazard-ratios" class="section level2">
+<h2>6. Hazard ratios</h2>
+<div id="load-the-data-1" class="section level3">
+<h3>Load the data</h3>
+<p>Load the datasets prepared in steps 1-4.</p>
+<pre class="r"><code>rm(list = ls())
+load(file=&quot;SHARED_disease_D41.RData&quot;)</code></pre>
+<div id="hazard-ratios-for-persons-males-and-females-combined" class="section level4">
+<h4>1. Hazard ratios for persons (males and females combined)</h4>
+<div id="model-a-adjusted-for-sex-and-calendar-time" class="section level5">
+<h5>Model A (adjusted for sex and calendar time)</h5>
+<pre class="r"><code>model_A &lt;- coxph(Surv(tstart, tstop, endpoint) ~ expo_D30 + kqn + entryD, data = data_survival)
+print(paste0(&quot;HR = &quot;, format(exp(summary(model_A)$coefficients[1, 1]), digits=1, nsmall=1),
+      &quot; [95% CI: &quot;, format(summary(model_A)$conf.int[1, 3], digits=1, nsmall=1), &quot;-&quot;, 
+      format(summary(model_A)$conf.int[1, 4], digits=1, nsmall=1), &quot;]&quot;))</code></pre>
+<pre><code>## [1] &quot;HR = 15.7 [95% CI: 15.5-15.9]&quot;</code></pre>
+</div>
+<div id="model-b-further-adjusted-for-mental-health-comorbidity" class="section level5">
+<h5>Model B (further adjusted for mental health comorbidity)</h5>
+<pre class="r"><code># Model B adjusts also for number of disorders, and it needs to be counted.
+data_survival$num_others &lt;- rowSums(data_survival[, c(&quot;adjust_D30_by_prev_D00&quot;, &quot;adjust_D30_by_prev_D10&quot;, &quot;adjust_D30_by_prev_D20&quot;, &quot;adjust_D30_by_prev_D51&quot;, &quot;adjust_D30_by_prev_D61&quot;, &quot;adjust_D30_by_prev_D70&quot;,&quot;adjust_D30_by_prev_D81&quot;, &quot;adjust_D30_by_prev_D91&quot;)])
+data_survival$num_others[data_survival$num_others&gt;4] &lt;- 4
+data_survival$num_others[data_survival$num_others==1] &lt;- 0
+
+model_B &lt;- coxph(Surv(tstart, tstop, endpoint) ~ expo_D30 + kqn + entryD
+                 + adjust_D30_by_prev_D00 + adjust_D30_by_prev_D10 + adjust_D30_by_prev_D20
+                 + adjust_D30_by_prev_D51 + adjust_D30_by_prev_D61 + adjust_D30_by_prev_D70
+                 + adjust_D30_by_prev_D81 + adjust_D30_by_prev_D91 + as.factor(num_others), data = data_survival)
+print(paste0(&quot;HR = &quot;, format(exp(summary(model_B)$coefficients[1, 1]), digits=1, nsmall=1),
+             &quot; [95% CI: &quot;, format(summary(model_B)$conf.int[1, 3], digits=1, nsmall=1), &quot;-&quot;, 
+             format(summary(model_B)$conf.int[1, 4], digits=1, nsmall=1), &quot;]&quot;))</code></pre>
+<pre><code>## [1] &quot;HR = 10.5 [95% CI: 10.3-10.6]&quot;</code></pre>
+</div>
+<div id="lagged-hr---model-a" class="section level5">
+<h5>Lagged HR - Model A</h5>
+<pre class="r"><code>times &lt;- c(&quot;0-6 months&quot;, &quot;6-12 months&quot;, &quot;1-2 years&quot;, &quot;2-5 years&quot;, &quot;5-10 years&quot;, &quot;10-15 years&quot;, &quot;15+ years&quot;)
+
+model_A_lagged &lt;- coxph(Surv(tstart, tstop, endpoint) ~ as.factor(expo_time_after_D30) + kqn + entryD, data = data_survival)
+
+for(i in 1:length(times)) {
+  print(paste0(times[i], &quot;: HR = &quot;, format(exp(summary(model_A_lagged)$coefficients[i, 1]), digits=1, nsmall=1), &quot; [95% CI: &quot;, format(summary(model_A_lagged)$conf.int[i, 3], digits=1, nsmall=1), &quot;-&quot;, format(summary(model_A_lagged)$conf.int[i, 4], digits=1, nsmall=1), &quot;]&quot;))
+}</code></pre>
+<pre><code>## [1] &quot;0-6 months: HR = 117.9 [95% CI: 115.9-119.8]&quot;
+## [1] &quot;6-12 months: HR = 18.5 [95% CI: 17.7-19.2]&quot;
+## [1] &quot;1-2 years: HR = 13.5 [95% CI: 13.0-14.0]&quot;
+## [1] &quot;2-5 years: HR = 9.4 [95% CI: 9.2- 9.7]&quot;
+## [1] &quot;5-10 years: HR = 7.6 [95% CI: 7.4-7.9]&quot;
+## [1] &quot;10-15 years: HR = 7.1 [95% CI: 6.8-7.4]&quot;
+## [1] &quot;15+ years: HR = 6.4 [95% CI: 6.2-6.7]&quot;</code></pre>
+</div>
+<div id="lagged-hr---model-b" class="section level5">
+<h5>Lagged HR - Model B</h5>
+<pre class="r"><code>model_B_lagged &lt;- coxph(Surv(tstart, tstop, endpoint) ~ as.factor(expo_time_after_D30) + kqn + entryD
+                 + adjust_D30_by_prev_D00 + adjust_D30_by_prev_D10 + adjust_D30_by_prev_D20
+                 + adjust_D30_by_prev_D51 + adjust_D30_by_prev_D61 + adjust_D30_by_prev_D70
+                 + adjust_D30_by_prev_D81 + adjust_D30_by_prev_D91 + as.factor(num_others), data = data_survival)
+
+for(i in 1:length(times)) {
+  print(paste0(times[i], &quot;: HR = &quot;, format(exp(summary(model_B_lagged)$coefficients[i, 1]), digits=1, nsmall=1), &quot; [95% CI: &quot;, format(summary(model_B_lagged)$conf.int[i, 3], digits=1, nsmall=1), &quot;-&quot;, format(summary(model_B_lagged)$conf.int[i, 4], digits=1, nsmall=1), &quot;]&quot;))
+}</code></pre>
+<pre><code>## [1] &quot;0-6 months: HR = 77.9 [95% CI: 76.5-79.2]&quot;
+## [1] &quot;6-12 months: HR = 12.2 [95% CI: 11.7-12.7]&quot;
+## [1] &quot;1-2 years: HR = 8.9 [95% CI: 8.6-9.2]&quot;
+## [1] &quot;2-5 years: HR = 6.2 [95% CI: 6.0-6.4]&quot;
+## [1] &quot;5-10 years: HR = 5.0 [95% CI: 4.9-5.2]&quot;
+## [1] &quot;10-15 years: HR = 4.6 [95% CI: 4.4-4.8]&quot;
+## [1] &quot;15+ years: HR = 4.3 [95% CI: 4.1-4.4]&quot;</code></pre>
+</div>
+</div>
+<div id="sex-specific-hazard-ratios" class="section level4">
+<h4>2. Sex-specific hazard ratios</h4>
+<div id="model-a-adjusted-for-sex-and-calendar-time-1" class="section level5">
+<h5>Model A (adjusted for sex and calendar time)</h5>
+<pre class="r"><code>model_A &lt;- coxph(Surv(tstart, tstop, endpoint) ~ expo_D30*kqn + entryD, data = data_survival)
+matrix_contrasts &lt;-t(
+    matrix(c(
+      1,0,0,0,
+      1,0,0,1
+    ), ncol=2))
+model_A_sex &lt;- glht(model_A, linfct=matrix_contrasts)
+HR &lt;- data.frame(format(exp(confint(model_A_sex)$confint)[1:2, ]), digits=1, nsmall=1)
+HR[1, &quot;sex&quot;] &lt;- &quot;Females&quot;
+HR[2, &quot;sex&quot;] &lt;- &quot;Males&quot;
+HR</code></pre>
+<pre><code>##   Estimate      lwr      upr digits nsmall     sex
+## 1 13.81755 13.58669 14.05234      1      1 Females
+## 2 19.85899 19.43763 20.28949      1      1   Males</code></pre>
+</div>
+<div id="model-b-further-adjusted-for-mental-health-comorbidity-1" class="section level5">
+<h5>Model B (further adjusted for mental health comorbidity)</h5>
+<pre class="r"><code>model_B &lt;- coxph(Surv(tstart, tstop, endpoint) ~ expo_D30*kqn + entryD
+                 + adjust_D30_by_prev_D00 + adjust_D30_by_prev_D10 + adjust_D30_by_prev_D20
+                 + adjust_D30_by_prev_D51 + adjust_D30_by_prev_D61 + adjust_D30_by_prev_D70
+                 + adjust_D30_by_prev_D81 + adjust_D30_by_prev_D91 + as.factor(num_others), data = data_survival)
+
+matrix_contrasts &lt;-t(
+  matrix(c(
+    1,rep(0, 13), 0,
+    1,rep(0, 13), 1
+  ), ncol=2))
+
+model_B_sex &lt;- glht(model_B, linfct=matrix_contrasts)
+HR &lt;- data.frame(format(exp(confint(model_B_sex)$confint)[1:2, ]), digits=1, nsmall=1)
+HR[1, &quot;sex&quot;] &lt;- &quot;Females&quot;
+HR[2, &quot;sex&quot;] &lt;- &quot;Males&quot;
+HR</code></pre>
+<pre><code>##    Estimate       lwr       upr digits nsmall     sex
+## 1  9.709337  9.540045  9.881634      1      1 Females
+## 2 11.995609 11.730379 12.266837      1      1   Males</code></pre>
+</div>
+<div id="lagged-hr---model-a-1" class="section level5">
+<h5>Lagged HR - Model A</h5>
+<pre class="r"><code>model_A_lagged &lt;- coxph(Surv(tstart, tstop, endpoint) ~ as.factor(expo_time_after_D30)*kqn + entryD, data = data_survival)
+matrix_contrasts &lt;-t(
+  matrix(c(
+    1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,
+    1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,0,
+    0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,0,
+    0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,0,
+    0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,0,
+    0,0,0,0,0,1,0,0,0,0,0,0,0,0,1,0,
+    0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,1    
+  ), ncol=14))
+
+model_A_lagged_sex &lt;- glht(model_A_lagged, linfct=matrix_contrasts)
+HR &lt;- data.frame(format(exp(confint(model_A_lagged_sex)$confint)[1:14, ]), digits=1, nsmall=1)
+HR[1:7, &quot;sex&quot;] &lt;- &quot;Females&quot;
+HR[8:14, &quot;sex&quot;] &lt;- &quot;Males&quot;
+HR$time_after_exposure &lt;- c(times, times)
+HR</code></pre>
+<pre><code>##      Estimate        lwr        upr digits nsmall     sex
+## 1  100.573032  97.475901 103.768569      1      1 Females
+## 2   16.905960  15.673953  18.234806      1      1 Females
+## 3   12.263157  11.480797  13.098830      1      1 Females
+## 4    8.357806   7.935272   8.802839      1      1 Females
+## 5    6.926955   6.547986   7.327857      1      1 Females
+## 6    6.518865   6.003519   7.078448      1      1 Females
+## 7    5.943717   5.549394   6.366060      1      1 Females
+## 8  156.370532 150.442878 162.531743      1      1   Males
+## 9   21.715463  19.585846  24.076638      1      1   Males
+## 10  16.035631  14.675332  17.522021      1      1   Males
+## 11  11.671978  10.914867  12.481607      1      1   Males
+## 12   9.191057   8.525265   9.908845      1      1   Males
+## 13   8.357129   7.470098   9.349490      1      1   Males
+## 14   7.564655   6.866189   8.334172      1      1   Males
+##    time_after_exposure
+## 1           0-6 months
+## 2          6-12 months
+## 3            1-2 years
+## 4            2-5 years
+## 5           5-10 years
+## 6          10-15 years
+## 7            15+ years
+## 8           0-6 months
+## 9          6-12 months
+## 10           1-2 years
+## 11           2-5 years
+## 12          5-10 years
+## 13         10-15 years
+## 14           15+ years</code></pre>
+</div>
+<div id="lagged-hr---model-b-1" class="section level5">
+<h5>Lagged HR - Model B</h5>
+<pre class="r"><code>model_B_lagged &lt;- coxph(Surv(tstart, tstop, endpoint) ~ as.factor(expo_time_after_D30)*kqn + entryD
+                 + adjust_D30_by_prev_D00 + adjust_D30_by_prev_D10 + adjust_D30_by_prev_D20
+                 + adjust_D30_by_prev_D51 + adjust_D30_by_prev_D61 + adjust_D30_by_prev_D70
+                 + adjust_D30_by_prev_D81 + adjust_D30_by_prev_D91 + as.factor(num_others), data = data_survival)
+matrix_contrasts &lt;-t(
+  matrix(c(
+    1,0,0,0,0,0,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,0,1,0,0,0,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,0,0,1,0,0,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,0,0,0,1,0,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,0,0,0,0,1,0,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    0,0,0,0,0,0,1,0,rep(0, 11),0,0,0,0,0,0,0,0,
+    1,0,0,0,0,0,0,0,rep(0, 11),0,1,0,0,0,0,0,0,
+    0,1,0,0,0,0,0,0,rep(0, 11),0,0,1,0,0,0,0,0,
+    0,0,1,0,0,0,0,0,rep(0, 11),0,0,0,1,0,0,0,0,
+    0,0,0,1,0,0,0,0,rep(0, 11),0,0,0,0,1,0,0,0,
+    0,0,0,0,1,0,0,0,rep(0, 11),0,0,0,0,0,1,0,0,
+    0,0,0,0,0,1,0,0,rep(0, 11),0,0,0,0,0,0,1,0,
+    0,0,0,0,0,0,1,0,rep(0, 11),0,0,0,0,0,0,0,1    
+  ), ncol=14))
+
+model_B_lagged_sex &lt;- glht(model_B_lagged, linfct=matrix_contrasts)
+HR &lt;- data.frame(format(exp(confint(model_B_lagged_sex)$confint)[1:14, ]), digits=1, nsmall=1)
+HR[1:7, &quot;sex&quot;] &lt;- &quot;Females&quot;
+HR[8:14, &quot;sex&quot;] &lt;- &quot;Males&quot;
+HR$time_after_exposure &lt;- c(times, times)
+HR</code></pre>
+<pre><code>##     Estimate       lwr       upr digits nsmall     sex time_after_exposure
+## 1  70.357165 68.147747 72.638216      1      1 Females          0-6 months
+## 2  11.808663 10.945229 12.740210      1      1 Females         6-12 months
+## 3   8.568211  8.019135  9.154882      1      1 Females           1-2 years
+## 4   5.842933  5.545382  6.156448      1      1 Females           2-5 years
+## 5   4.824181  4.558448  5.105406      1      1 Females          5-10 years
+## 6   4.417782  4.067046  4.798764      1      1 Females         10-15 years
+## 7   4.108375  3.833590  4.402856      1      1 Females           15+ years
+## 8  92.709377 89.120014 96.443303      1      1   Males          0-6 months
+## 9  12.833305 11.571106 14.233187      1      1   Males         6-12 months
+## 10  9.480471  8.673065 10.363041      1      1   Males           1-2 years
+## 11  6.929077  6.476453  7.413333      1      1   Males           2-5 years
+## 12  5.492374  5.092054  5.924166      1      1   Males          5-10 years
+## 13  4.913075  4.389857  5.498655      1      1   Males         10-15 years
+## 14  4.642179  4.211412  5.117008      1      1   Males           15+ years</code></pre>
+</div>
+</div>
+</div>
+</div>
+<div id="absolute-risks" class="section level2">
+<h2>7. Absolute risks</h2>
+<div id="load-the-data-2" class="section level3">
+<h3>Load the data</h3>
+<p>Load the datasets prepared in steps 1-4.</p>
+<pre class="r"><code>rm(list = ls())
+load(file=&quot;SHARED_disease_D41.RData&quot;)</code></pre>
+</div>
+<div id="prepare-data-for-a-multi-state-model" class="section level3">
+<h3>Prepare data for a multi-state model</h3>
+<p>In the Cox proportional hazards models (used to estimate hazard ratios), those who died or emigrated/disappeared were censored at date of death or emigration. The absolute risks can be biased if we do not take into consideration these competing risks events. For this reason, we give a new outcome to those events: 2 for disappearance or emigration, and 3 for death.</p>
+<pre class="r"><code>data_survival[data_survival$statdA==data_survival$tstop &amp; data_survival$fail %in% c(70, 80), &quot;endpoint&quot;] &lt;- 2
+data_survival[data_survival$statdA==data_survival$tstop &amp; data_survival$fail==90, &quot;endpoint&quot;] &lt;- 3</code></pre>
+<p>For multi-state models, it is necessary to define a matrix of transitions. In this example, every person starts being free of the later-disorder (Neurotic Disorders), and they are labelled “healthy”. During follow-up, they can change the status from “healthy” to “diseased”, “emigrated”, or “dead”. No other transitions (<em>e.g.</em> from “emigrated” to “diseased”) are allowed.</p>
+<pre class="r"><code>tmat &lt;- transMat(x=list(c(2,3,4), c(), c(), c()), names=c(&quot;healthy&quot;, &quot;disease&quot;, &quot;emi&quot;, &quot;death&quot;))
+tmat</code></pre>
+<pre><code>##          to
+## from      healthy disease emi death
+##   healthy      NA       1   2     3
+##   disease      NA      NA  NA    NA
+##   emi          NA      NA  NA    NA
+##   death        NA      NA  NA    NA</code></pre>
+<p>There are 4 states, but only 3 transitions. Each observation in the dataset has to be repeated 3 times. In each repetition, one different possible outcome is considered, and the other two treated as censoring.</p>
+<pre class="r"><code>CRcoxdata &lt;- combine(data_survival, data_survival, data_survival, names = c(1, 2, 3))</code></pre>
+<p>A new outcome <strong>d</strong> can now be created, where each type of outcome is considering censoring in the other two repetitions.</p>
+<pre class="r"><code>CRcoxdata$d &lt;- ((CRcoxdata$endpoint == 1) * (CRcoxdata$source == 1)) +
+  ((CRcoxdata$endpoint == 2) * (CRcoxdata$source == 2)) +
+  ((CRcoxdata$endpoint == 3) * (CRcoxdata$source == 3))
+
+CRcoxdata$h &lt;- as.numeric(CRcoxdata$source)</code></pre>
+<p>The invented data used in steps 1-4 can be used to illustrate the data structure. Note that the 6 observations for the invented person have been repeated 3 times.</p>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">D30A</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">endpoint</th>
+<th align="left">source</th>
+<th align="right">d</th>
+<th align="right">h</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">14.58900</td>
+<td align="right">20.37804</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">20.37804</td>
+<td align="right">25.50681</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">14.58900</td>
+<td align="right">20.37804</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">20.37804</td>
+<td align="right">25.50681</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">14.58900</td>
+<td align="right">20.37804</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">20.37804</td>
+<td align="right">25.50681</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">1</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="focus-only-on-persons-with-mood-disorders-prior-disorder" class="section level3">
+<h3>Focus only on persons with Mood Disorders (prior-disorder)</h3>
+<p>In these analyses, we aim to estimate the proportion of individuals with a diagnosis of a prior-disorder (Mood Disorders) who later develop a later-disorder (Neurotic Disorders). For this reason, we can keep only those with a diagnosis of Mood Disorders, and start the follow-up time at onset of the disorder.</p>
+<pre class="r"><code>CRcoxdata_expo &lt;- CRcoxdata[!is.na(CRcoxdata[, &quot;D30A&quot;]),]
+CRcoxdata_expo[, &quot;expo_Tstart&quot;] &lt;- CRcoxdata_expo[, &quot;tstart&quot;] - CRcoxdata_expo[, &quot;D30A&quot;]
+CRcoxdata_expo[, &quot;expo_Tstop&quot;] &lt;- CRcoxdata_expo[, &quot;tstop&quot;] - CRcoxdata_expo[, &quot;D30A&quot;]
+CRcoxdata_expo &lt;- CRcoxdata_expo[CRcoxdata_expo$expo_Tstart &gt;= 0,]</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">D30A</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">expo_Tstart</th>
+<th align="right">expo_Tstop</th>
+<th align="right">endpoint</th>
+<th align="left">source</th>
+<th align="right">d</th>
+<th align="right">h</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0.0</td>
+<td align="right">0.500000</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0.5</td>
+<td align="right">1.000000</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">1.0</td>
+<td align="right">2.000000</td>
+<td align="right">0</td>
+<td align="left">1</td>
+<td align="right">0</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">2.0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="left">1</td>
+<td align="right">1</td>
+<td align="right">1</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0.0</td>
+<td align="right">0.500000</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0.5</td>
+<td align="right">1.000000</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">1.0</td>
+<td align="right">2.000000</td>
+<td align="right">0</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">2.0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="left">2</td>
+<td align="right">0</td>
+<td align="right">2</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">0.0</td>
+<td align="right">0.500000</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.00681</td>
+<td align="right">26.50681</td>
+<td align="right">0.5</td>
+<td align="right">1.000000</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">26.50681</td>
+<td align="right">27.50681</td>
+<td align="right">1.0</td>
+<td align="right">2.000000</td>
+<td align="right">0</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="right">27.50681</td>
+<td align="right">29.44927</td>
+<td align="right">2.0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="left">3</td>
+<td align="right">0</td>
+<td align="right">3</td>
+</tr>
+</tbody>
+</table>
+<p>The new variables <strong>expo_Tstart</strong> and <strong>expo_Tstop</strong> focus on time since onset of Mood Disorders, compared to the old variables <strong>tstart</strong> and <strong>tstop</strong> that focus on time since birth (age).</p>
+<p>Each replication (<em>h=1</em>, <em>h=2</em>, and <em>h=3</em>) is linked to one specific transition (<em>1–&gt;2</em>, <em>1–&gt;3</em>, <em>1–&gt;4</em>). Two new variables <strong>from</strong> and <strong>to</strong> define these transitions.</p>
+<pre class="r"><code>CRcoxdata_expo$from &lt;- 1
+CRcoxdata_expo$to &lt;- CRcoxdata_expo$h + 1</code></pre>
+<p>In order to investigate specific absolute risks depending on age at diagnosis of Mood Disorders, different age groups have to be identified.</p>
+<pre class="r"><code>CRcoxdata_expo$age_group &lt;- cut(CRcoxdata_expo[, &quot;D30A&quot;], breaks=c(0, 20, 40, 60, 80, 200), include.lowest=TRUE, right = FALSE)
+CRcoxdata_expo$age_group &lt;- droplevels(CRcoxdata_expo$age_group)</code></pre>
+<p>Finally, the dataset was splitted many times (because of mental health comorbidity, time since exposure, etc.). This level of detail is not necessary for this analysis, so the dataset can be minimized.</p>
+<pre class="r"><code>CRcoxdata_expo_min &lt;- data.table(CRcoxdata_expo[, c(&quot;pnr&quot;, &quot;kqn&quot;, &quot;D30A&quot;, &quot;age_group&quot;, &quot;expo_Tstart&quot;, &quot;expo_Tstop&quot;, &quot;from&quot;, &quot;to&quot;, &quot;h&quot;, &quot;d&quot;)])
+CRcoxdata_expo_min &lt;- CRcoxdata_expo_min[, list(tstart=min(expo_Tstart), tstop=max(expo_Tstop), d=max(d)), by=c(&quot;pnr&quot;, &quot;kqn&quot;, &quot;D30A&quot;, &quot;age_group&quot;, &quot;from&quot;, &quot;to&quot;, &quot;h&quot;)]
+CRcoxdata_expo_min &lt;- data.frame(CRcoxdata_expo_min)</code></pre>
+<table>
+<caption>This table includes invented data (not real person)</caption>
+<thead>
+<tr class="header">
+<th align="left">pnr</th>
+<th align="right">D30A</th>
+<th align="left">age_group</th>
+<th align="left">kqn</th>
+<th align="right">tstart</th>
+<th align="right">tstop</th>
+<th align="right">from</th>
+<th align="right">to</th>
+<th align="right">d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="left">[20,40)</td>
+<td align="left">K</td>
+<td align="right">0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="right">2</td>
+<td align="right">1</td>
+</tr>
+<tr class="even">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="left">[20,40)</td>
+<td align="left">K</td>
+<td align="right">0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="right">3</td>
+<td align="right">0</td>
+</tr>
+<tr class="odd">
+<td align="left">invented_person</td>
+<td align="right">25.50681</td>
+<td align="left">[20,40)</td>
+<td align="left">K</td>
+<td align="right">0</td>
+<td align="right">3.942466</td>
+<td align="right">1</td>
+<td align="right">4</td>
+<td align="right">0</td>
+</tr>
+</tbody>
+</table>
+<p>The invented person is followed from onset of Mood Disorders (at age 25.5 years) during 3.94 years, moment in which this person is diagnosed with Neurotic Disorders (and censored for emigration or death).</p>
+</div>
+<div id="count-number-of-persons" class="section level3">
+<h3>Count number of persons</h3>
+<p>In this step, the number of persons with Mood Disorders (<strong>exposed</strong>) is calculated, together with how many develop subsequent Neurotic Disorders (<strong>d</strong>).</p>
+<pre class="r"><code>count_data &lt;- CRcoxdata_expo_min[CRcoxdata_expo_min$h==1, c(&quot;pnr&quot;, &quot;kqn&quot;, &quot;age_group&quot;, &quot;tstop&quot;, &quot;d&quot;)]
+count_data &lt;- count_data[!duplicated(count_data), ]
+count_data$number &lt;- 1
+numbers &lt;- aggregate(cbind(number, d) ~ kqn + age_group, data = count_data, FUN=sum, na.rm=TRUE)
+
+# According to Danish regulations, we cannot report cells with less than 3 cases
+numbers_print &lt;- numbers
+numbers_print[numbers_print$number&lt;3, &quot;number&quot;] &lt;- NA
+numbers_print[numbers_print$d&lt;3, &quot;d&quot;] &lt;- NA
+
+kable(numbers_print)</code></pre>
+<table>
+<thead>
+<tr class="header">
+<th align="left">kqn</th>
+<th align="left">age_group</th>
+<th align="right">number</th>
+<th align="right">d</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td align="left">K</td>
+<td align="left">[0,20)</td>
+<td align="right">11474</td>
+<td align="right">4472</td>
+</tr>
+<tr class="even">
+<td align="left">M</td>
+<td align="left">[0,20)</td>
+<td align="right">5398</td>
+<td align="right">1649</td>
+</tr>
+<tr class="odd">
+<td align="left">K</td>
+<td align="left">[20,40)</td>
+<td align="right">36526</td>
+<td align="right">9990</td>
+</tr>
+<tr class="even">
+<td align="left">M</td>
+<td align="left">[20,40)</td>
+<td align="right">23077</td>
+<td align="right">6003</td>
+</tr>
+<tr class="odd">
+<td align="left">K</td>
+<td align="left">[40,60)</td>
+<td align="right">28614</td>
+<td align="right">5470</td>
+</tr>
+<tr class="even">
+<td align="left">M</td>
+<td align="left">[40,60)</td>
+<td align="right">21018</td>
+<td align="right">4172</td>
+</tr>
+<tr class="odd">
+<td align="left">K</td>
+<td align="left">[60,80)</td>
+<td align="right">17207</td>
+<td align="right">1911</td>
+</tr>
+<tr class="even">
+<td align="left">M</td>
+<td align="left">[60,80)</td>
+<td align="right">10121</td>
+<td align="right">1140</td>
+</tr>
+<tr class="odd">
+<td align="left">K</td>
+<td align="left">[80,200]</td>
+<td align="right">8334</td>
+<td align="right">358</td>
+</tr>
+<tr class="even">
+<td align="left">M</td>
+<td align="left">[80,200]</td>
+<td align="right">3212</td>
+<td align="right">157</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div id="estimate-cumulative-incidence-proportion-cip-for-each-sex-and-age-group" class="section level3">
+<h3>Estimate cumulative incidence proportion (CIP) for each sex and age group</h3>
+<pre class="r"><code>for(age_group in c(&quot;all&quot;, levels(CRcoxdata_expo_min$age_group))) { 
+  # First we select the observations for the age group of interest
+  if(age_group==&quot;all&quot;) { 
+    multi &lt;- CRcoxdata_expo_min
+  } else {
+    multi &lt;- CRcoxdata_expo_min[CRcoxdata_expo_min$age_group==age_group, ]
+  }  
+  
+  for(sex in c(&quot;all&quot;, &quot;M&quot;, &quot;K&quot;)) {
+    # Second we select the observations for the sex of interest
+    if(sex==&quot;all&quot;) {
+      multi2 &lt;- multi
+    } else {
+      multi2 &lt;- multi[(multi[, &quot;kqn&quot;]==sex), ]
+    }
+    
+    # The CIP is estimated only if there is at least one person in the specific sex- and age-group
+    if(dim(multi2)[1]&gt;0) {
+      multi2$trans &lt;- multi2$h
+      coxres &lt;- coxph(Surv(tstart, tstop, d) ~ strata(trans), data=multi2, method=&quot;breslow&quot;)
+      who &lt;- multi2[c(1:3), ]
+      who$strata&lt;-1:3
+      msf0 &lt;- msfit(coxres, who, trans=tmat)
+      pt0 &lt;- probtrans(msf0, predt=0)
+      CIP_aux &lt;- pt0[[1]]
+      CIP_aux$sex &lt;- sex
+      CIP_aux$age_group &lt;- age_group
+      
+      if (age_group==&quot;all&quot; &amp; sex==&quot;all&quot;) {
+        CIP &lt;- CIP_aux
+      } else {
+        CIP &lt;- rbind(CIP, CIP_aux)
+      }
+    }
+  }    
+}
+
+head(CIP)</code></pre>
+<pre><code>##          time   pstate1     pstate2 pstate3      pstate4          se1
+## 1 0.000000000 1.0000000 0.000000000       0 0.000000e+00 0.0000000000
+## 2 0.002732240 0.9983728 0.001573522       0 5.364279e-05 0.0001204172
+## 3 0.002732240 0.9980241 0.001913317       0 6.258478e-05 0.0001326891
+## 4 0.002737851 0.9916574 0.008280012       0 6.258478e-05 0.0002712736
+## 5 0.002737851 0.9655200 0.034417440       0 6.258478e-05 0.0005397441
+## 6 0.002737851 0.9612815 0.038655942       0 6.258478e-05 0.0005712619
+##            se2 se3          se4 sex age_group
+## 1 0.0000000000   0 0.000000e+00 all       all
+## 2 0.0001184157   0 2.186394e-05 all       all
+## 3 0.0001305720   0 2.362047e-05 all       all
+## 4 0.0002702575   0 2.362047e-05 all       all
+## 5 0.0005392612   0 2.362047e-05 all       all
+## 6 0.0005708098   0 2.362047e-05 all       all</code></pre>
+</div>
+<div id="keep-only-necessary-information" class="section level3">
+<h3>Keep only necessary information</h3>
+<p>There is information on too many data points and for all possible transitions. In this step, we will keep only one estimate per month (aprox 0.08 years) and only transition 1 (going from “Healthy” to “Diseased”).</p>
+<pre class="r"><code>CIP$time_since_dx &lt;- 0.08 * ceiling(as.numeric(CIP$time)/0.08)
+CIP &lt;- ddply(CIP, .(sex, age_group, time_since_dx), function(x) tail(x, 1))
+CIP$cip &lt;- 100*CIP$pstate2
+CIP[, &quot;cip_low&quot;] &lt;- pmax(0, 100*exp(log(CIP[, &quot;pstate2&quot;]) - qnorm(0.975) * (CIP[, &quot;se2&quot;] / CIP[, &quot;pstate2&quot;])))
+CIP[, &quot;cip_high&quot;] &lt;- pmin(100, 100*exp(log(CIP[, &quot;pstate2&quot;]) + qnorm(0.975) * (CIP[, &quot;se2&quot;] / CIP[, &quot;pstate2&quot;])))
+CIP &lt;- CIP[, c(&quot;sex&quot;, &quot;age_group&quot;, &quot;time&quot;, &quot;cip&quot;, &quot;cip_low&quot;, &quot;cip_high&quot;)]
+head(CIP)</code></pre>
+<pre><code>##   sex age_group       time      cip  cip_low cip_high
+## 1 all    [0,20) 0.00000000  0.00000      NaN      NaN
+## 2 all    [0,20) 0.07945205 14.09683 13.55720 14.65794
+## 3 all    [0,20) 0.15890411 16.30146 15.72631 16.89764
+## 4 all    [0,20) 0.23835616 17.64508 17.05019 18.26074
+## 5 all    [0,20) 0.31780822 18.62727 18.01874 19.25635
+## 6 all    [0,20) 0.40000000 19.34755 18.72941 19.98608</code></pre>
+<p>We are interested on the first 15 years after the prior-disorder. We will delete the observations after 15 years, and extend the last observation until exact 15 years after the prior-disorder.</p>
+<pre class="r"><code>CIP &lt;- CIP[CIP$time&lt;=15, ]
+CIP_last &lt;- ddply(CIP, .(sex, age_group), function(x) x[nrow(x), ])
+CIP_last$time &lt;- 15
+CIP &lt;- rbind(CIP, CIP_last)</code></pre>
+</div>
+<div id="merge-the-number-of-cases-and-the-cip-estimates" class="section level3">
+<h3>Merge the number of cases and the CIP estimates</h3>
+<pre class="r"><code>numbers &lt;- numbers[!duplicated(numbers), ]
+numbers2 &lt;- aggregate(cbind(number, d)~kqn, data=numbers, FUN=sum)
+numbers2$age_group &lt;- &quot;all&quot;
+numbers3 &lt;- aggregate(cbind(number, d)~age_group, data=numbers, FUN=sum)
+numbers3$kqn &lt;- &quot;all&quot;
+numbers4 &lt;- aggregate(cbind(number, d)~1, data=numbers, FUN=sum)
+numbers4$age_group &lt;- &quot;all&quot;
+numbers4$kqn &lt;- &quot;all&quot;
+numbers &lt;- rbind(numbers, numbers2, numbers3, numbers4)
+colnames(numbers)[colnames(numbers)==&quot;kqn&quot;] &lt;- &quot;sex&quot;
+
+CIP &lt;- merge(CIP, numbers, all.x=T, all.y=F)
+colnames(CIP)[colnames(CIP)==&quot;d&quot;]&lt;-&quot;cases_outcome&quot;
+colnames(CIP)[colnames(CIP)==&quot;number&quot;]&lt;-&quot;number_exposed&quot;
+
+# According to Danish regulations, we cannot report cells with less than 3 cases
+CIP[CIP$cases_outcome&lt;3, &quot;cip&quot;] &lt;- NA
+CIP[CIP$cases_outcome&lt;3, &quot;cip_low&quot;] &lt;- NA
+CIP[CIP$cases_outcome&lt;3, &quot;cip_high&quot;] &lt;- NA
+CIP[CIP$cases_outcome&lt;3, &quot;cases_outcome&quot;] &lt;- NA
+CIP[CIP$number_exposed&lt;3, &quot;number_exposed&quot;] &lt;- NA
+
+head(CIP)</code></pre>
+<pre><code>##   sex age_group       time      cip  cip_low cip_high number_exposed
+## 1 all    [0,20) 0.00000000  0.00000      NaN      NaN          16872
+## 2 all    [0,20) 0.07945205 14.09683 13.55720 14.65794          16872
+## 3 all    [0,20) 0.15890411 16.30146 15.72631 16.89764          16872
+## 4 all    [0,20) 0.23835616 17.64508 17.05019 18.26074          16872
+## 5 all    [0,20) 0.31780822 18.62727 18.01874 19.25635          16872
+## 6 all    [0,20) 0.40000000 19.34755 18.72941 19.98608          16872
+##   cases_outcome
+## 1          6121
+## 2          6121
+## 3          6121
+## 4          6121
+## 5          6121
+## 6          6121</code></pre>
+</div>
 </div>
 </div>
 
