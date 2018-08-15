@@ -1,5 +1,5 @@
 # the-NB-COMO-project
-This repository includes an HTML file created with R markdown in order to replicate the analyses performed on the following paper:
+This repository includes an HTML file (https://plana-ripoll.github.io/NB-COMO/) created with R markdown in order to replicate the analyses performed on the following paper:
 
 Plana-Ripoll et al. The pervasive nature of comorbidity within mental disorders: a comprehensive, nationwide cohort study. Journal , 201x; xx(xx): xx-xx. 
 
