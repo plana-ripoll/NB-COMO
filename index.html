@@ -1614,13 +1614,13 @@ matrix_contrasts &lt;-t(
       1,0,0,1
     ), ncol=2))
 model_A_sex &lt;- glht(model_A, linfct=matrix_contrasts)
-HR &lt;- data.frame(format(exp(confint(model_A_sex)$confint)[1:2, ]), digits=1, nsmall=1)
+HR &lt;- data.frame(format(exp(confint(model_A_sex)$confint)[1:2, ], digits=1, nsmall=1))
 HR[1, &quot;sex&quot;] &lt;- &quot;Females&quot;
 HR[2, &quot;sex&quot;] &lt;- &quot;Males&quot;
 HR</code></pre>
-<pre><code>##   Estimate      lwr      upr digits nsmall     sex
-## 1 13.81755 13.58669 14.05234      1      1 Females
-## 2 19.85899 19.43763 20.28949      1      1   Males</code></pre>
+<pre><code>##   Estimate  lwr  upr     sex
+## 1     13.8 13.6 14.1 Females
+## 2     19.9 19.4 20.3   Males</code></pre>
 </div>
 <div id="model-b-further-adjusted-for-mental-health-comorbidity-1" class="section level5">
 <h5>Model B (further adjusted for mental health comorbidity)</h5>
@@ -1636,13 +1636,13 @@ matrix_contrasts &lt;-t(
   ), ncol=2))
 
 model_B_sex &lt;- glht(model_B, linfct=matrix_contrasts)
-HR &lt;- data.frame(format(exp(confint(model_B_sex)$confint)[1:2, ]), digits=1, nsmall=1)
+HR &lt;- data.frame(format(exp(confint(model_B_sex)$confint)[1:2, ], digits=1, nsmall=1))
 HR[1, &quot;sex&quot;] &lt;- &quot;Females&quot;
 HR[2, &quot;sex&quot;] &lt;- &quot;Males&quot;
 HR</code></pre>
-<pre><code>##    Estimate       lwr       upr digits nsmall     sex
-## 1  9.709337  9.540045  9.881634      1      1 Females
-## 2 11.995609 11.730379 12.266837      1      1   Males</code></pre>
+<pre><code>##   Estimate  lwr  upr     sex
+## 1      9.7  9.5  9.9 Females
+## 2     12.0 11.7 12.3   Males</code></pre>
 </div>
 <div id="lagged-hr---model-a-1" class="section level5">
 <h5>Lagged HR - Model A</h5>
@@ -1666,41 +1666,26 @@ matrix_contrasts &lt;-t(
   ), ncol=14))
 
 model_A_lagged_sex &lt;- glht(model_A_lagged, linfct=matrix_contrasts)
-HR &lt;- data.frame(format(exp(confint(model_A_lagged_sex)$confint)[1:14, ]), digits=1, nsmall=1)
+HR &lt;- data.frame(format(exp(confint(model_A_lagged_sex)$confint)[1:14, ], digits=1, nsmall=1))
 HR[1:7, &quot;sex&quot;] &lt;- &quot;Females&quot;
 HR[8:14, &quot;sex&quot;] &lt;- &quot;Males&quot;
 HR$time_after_exposure &lt;- c(times, times)
 HR</code></pre>
-<pre><code>##      Estimate        lwr        upr digits nsmall     sex
-## 1  100.573032  97.475901 103.768569      1      1 Females
-## 2   16.905960  15.673953  18.234806      1      1 Females
-## 3   12.263157  11.480797  13.098830      1      1 Females
-## 4    8.357806   7.935272   8.802839      1      1 Females
-## 5    6.926955   6.547986   7.327857      1      1 Females
-## 6    6.518865   6.003519   7.078448      1      1 Females
-## 7    5.943717   5.549394   6.366060      1      1 Females
-## 8  156.370532 150.442878 162.531743      1      1   Males
-## 9   21.715463  19.585846  24.076638      1      1   Males
-## 10  16.035631  14.675332  17.522021      1      1   Males
-## 11  11.671978  10.914867  12.481607      1      1   Males
-## 12   9.191057   8.525265   9.908845      1      1   Males
-## 13   8.357129   7.470098   9.349490      1      1   Males
-## 14   7.564655   6.866189   8.334172      1      1   Males
-##    time_after_exposure
-## 1           0-6 months
-## 2          6-12 months
-## 3            1-2 years
-## 4            2-5 years
-## 5           5-10 years
-## 6          10-15 years
-## 7            15+ years
-## 8           0-6 months
-## 9          6-12 months
-## 10           1-2 years
-## 11           2-5 years
-## 12          5-10 years
-## 13         10-15 years
-## 14           15+ years</code></pre>
+<pre><code>##    Estimate   lwr   upr     sex time_after_exposure
+## 1     100.6  97.5 103.8 Females          0-6 months
+## 2      16.9  15.7  18.2 Females         6-12 months
+## 3      12.3  11.5  13.1 Females           1-2 years
+## 4       8.4   7.9   8.8 Females           2-5 years
+## 5       6.9   6.5   7.3 Females          5-10 years
+## 6       6.5   6.0   7.1 Females         10-15 years
+## 7       5.9   5.5   6.4 Females           15+ years
+## 8     156.4 150.4 162.5   Males          0-6 months
+## 9      21.7  19.6  24.1   Males         6-12 months
+## 10     16.0  14.7  17.5   Males           1-2 years
+## 11     11.7  10.9  12.5   Males           2-5 years
+## 12      9.2   8.5   9.9   Males          5-10 years
+## 13      8.4   7.5   9.3   Males         10-15 years
+## 14      7.6   6.9   8.3   Males           15+ years</code></pre>
 </div>
 <div id="lagged-hr---model-b-1" class="section level5">
 <h5>Lagged HR - Model B</h5>
@@ -1727,26 +1712,26 @@ matrix_contrasts &lt;-t(
   ), ncol=14))
 
 model_B_lagged_sex &lt;- glht(model_B_lagged, linfct=matrix_contrasts)
-HR &lt;- data.frame(format(exp(confint(model_B_lagged_sex)$confint)[1:14, ]), digits=1, nsmall=1)
+HR &lt;- data.frame(format(exp(confint(model_B_lagged_sex)$confint)[1:14, ], digits=1, nsmall=1))
 HR[1:7, &quot;sex&quot;] &lt;- &quot;Females&quot;
 HR[8:14, &quot;sex&quot;] &lt;- &quot;Males&quot;
 HR$time_after_exposure &lt;- c(times, times)
 HR</code></pre>
-<pre><code>##     Estimate       lwr       upr digits nsmall     sex time_after_exposure
-## 1  70.357165 68.147747 72.638216      1      1 Females          0-6 months
-## 2  11.808663 10.945229 12.740210      1      1 Females         6-12 months
-## 3   8.568211  8.019135  9.154882      1      1 Females           1-2 years
-## 4   5.842933  5.545382  6.156448      1      1 Females           2-5 years
-## 5   4.824181  4.558448  5.105406      1      1 Females          5-10 years
-## 6   4.417782  4.067046  4.798764      1      1 Females         10-15 years
-## 7   4.108375  3.833590  4.402856      1      1 Females           15+ years
-## 8  92.709377 89.120014 96.443303      1      1   Males          0-6 months
-## 9  12.833305 11.571106 14.233187      1      1   Males         6-12 months
-## 10  9.480471  8.673065 10.363041      1      1   Males           1-2 years
-## 11  6.929077  6.476453  7.413333      1      1   Males           2-5 years
-## 12  5.492374  5.092054  5.924166      1      1   Males          5-10 years
-## 13  4.913075  4.389857  5.498655      1      1   Males         10-15 years
-## 14  4.642179  4.211412  5.117008      1      1   Males           15+ years</code></pre>
+<pre><code>##    Estimate  lwr  upr     sex time_after_exposure
+## 1      70.4 68.1 72.6 Females          0-6 months
+## 2      11.8 10.9 12.7 Females         6-12 months
+## 3       8.6  8.0  9.2 Females           1-2 years
+## 4       5.8  5.5  6.2 Females           2-5 years
+## 5       4.8  4.6  5.1 Females          5-10 years
+## 6       4.4  4.1  4.8 Females         10-15 years
+## 7       4.1  3.8  4.4 Females           15+ years
+## 8      92.7 89.1 96.4   Males          0-6 months
+## 9      12.8 11.6 14.2   Males         6-12 months
+## 10      9.5  8.7 10.4   Males           1-2 years
+## 11      6.9  6.5  7.4   Males           2-5 years
+## 12      5.5  5.1  5.9   Males          5-10 years
+## 13      4.9  4.4  5.5   Males         10-15 years
+## 14      4.6  4.2  5.1   Males           15+ years</code></pre>
 </div>
 </div>
 </div>
